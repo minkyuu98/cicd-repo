@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사과 게임 최종본 (타이머 포함)</title>
+    <title>사과 게임 (모두 5버전)</title>
     <style>
         /* 기본 스타일 */
         body {
             font-family: 'Malgun Gothic', 'Arial', sans-serif;
-            background-color: #e0e6ed; /* 화면이 고장난 것처럼 보이지 않게 밝은 배경색으로 변경 */
+            background-color: #e0e6ed; 
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            user-select: none; /* 텍스트 선택 방지 */
+            user-select: none; 
         }
 
-        /* 기기 프레임 - 깨지지 않도록 크기 고정 */
+        /* 기기 프레임 */
         .tablet-frame {
             background-color: #2ecc71;
             width: 900px;
@@ -47,7 +47,7 @@
         .apple-grid {
             flex-grow: 1;
             display: grid;
-            grid-template-columns: repeat(17, 35px); /* 사과 크기 고정 */
+            grid-template-columns: repeat(17, 35px); 
             grid-template-rows: repeat(10, 35px);
             justify-content: center;
             align-content: center;
@@ -118,7 +118,7 @@
         /* 타이머 차오르는 부분 */
         .progress-bar-fill {
             width: 100%;
-            height: 100%; /* 자바스크립트로 조절됨 */
+            height: 100%; 
             background-color: #2ecc71;
             border-radius: 10px;
             transition: height 1s linear, background-color 0.5s;
@@ -202,7 +202,6 @@
         let startCell = null;
         let selectedCells = [];
 
-        // 게임 초기화 및 사과 배치
         function initGame() {
             grid.innerHTML = '';
             score = 0;
@@ -210,7 +209,6 @@
             timeLeft = GAME_TIME;
             isDragging = false;
             
-            // 타이머 초기화
             clearInterval(timerInterval);
             updateTimeBar();
             
@@ -220,7 +218,9 @@
                     apple.className = 'apple';
                     apple.dataset.row = r;
                     apple.dataset.col = c;
-                    apple.textContent = Math.floor(Math.random() * 9) + 1;
+                    
+                    // 👉 여기가 수정된 부분입니다! (랜덤 공식 대신 무조건 5를 넣음)
+                    apple.textContent = 5;
 
                     apple.addEventListener('mousedown', startDrag);
                     apple.addEventListener('mouseenter', drag);
@@ -228,7 +228,6 @@
                 }
             }
 
-            // 타이머 시작
             timerInterval = setInterval(() => {
                 timeLeft--;
                 updateTimeBar();
@@ -240,12 +239,10 @@
             }, 1000);
         }
 
-        // 타이머 바 시각적 업데이트 로직
         function updateTimeBar() {
             const percentage = (timeLeft / GAME_TIME) * 100;
             timeBar.style.height = percentage + '%';
             
-            // 시간이 20% 이하로 남으면 빨간색으로 경고
             if (percentage <= 20) {
                 timeBar.style.backgroundColor = '#e74c3c';
             } else {
@@ -256,7 +253,7 @@
         document.addEventListener('mouseup', endDrag);
 
         function startDrag(e) {
-            if (timeLeft <= 0) return; // 시간 끝나면 조작 불가
+            if (timeLeft <= 0) return; 
             isDragging = true;
             startCell = e.target;
             selectArea(startCell, startCell);
@@ -270,7 +267,6 @@
         function selectArea(start, end) {
             clearSelection();
             
-            // 오류 방지 (사과가 아닌 빈 공간을 드래그했을 때 튕기는 것 방지)
             if(!start || !end || !start.classList || !end.classList) return;
             if(!start.classList.contains('apple') || !end.classList.contains('apple')) return;
 
@@ -302,7 +298,6 @@
             let sum = 0;
             selectedCells.forEach(cell => sum += parseInt(cell.textContent));
 
-            // 합이 10이면 사과 숨기고 점수 올리기
             if (sum === 10) {
                 selectedCells.forEach(cell => cell.classList.add('hidden'));
                 score += selectedCells.length;
@@ -312,7 +307,6 @@
             clearSelection();
         }
 
-        // 브라우저가 열리면 바로 게임 시작
         initGame();
     </script>
 </body>
