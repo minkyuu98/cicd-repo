@@ -6,8 +6,8 @@ pipeline {
     agent any
 
     environment {
-        strDockertag =  '${TODAY}_${BUILD_ID}'
-        strDockerImage = 'minkyuu98/cicd-test:${strDockertag}'
+        strDockertag =  "${TODAY}_${BUILD_ID}"
+        strDockerImage = "minkyuu98/cicd-test:${strDockertag}"
     }
     stages {
         stage('Github Pull') {
