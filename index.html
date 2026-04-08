@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사과 게임 UI + 기능</title>
+    <title>사과 게임 최종본 (타이머 포함)</title>
     <style>
         /* 기본 스타일 */
         body {
             font-family: 'Malgun Gothic', 'Arial', sans-serif;
-            background-color: #333;
+            background-color: #e0e6ed; /* 화면이 고장난 것처럼 보이지 않게 밝은 배경색으로 변경 */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -17,19 +17,18 @@
             user-select: none; /* 텍스트 선택 방지 */
         }
 
-        /* 기기 프레임 */
+        /* 기기 프레임 - 깨지지 않도록 크기 고정 */
         .tablet-frame {
             background-color: #2ecc71;
-            width: 90%;
-            max-width: 1200px;
-            aspect-ratio: 16 / 10;
-            border-radius: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            padding: 30px;
+            width: 900px;
+            height: 550px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 20px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            border: 10px solid #27ae60;
+            border: 8px solid #27ae60;
         }
 
         /* 메인 게임 영역 */
@@ -39,18 +38,20 @@
             background-image: linear-gradient(#f0fff4 1px, transparent 1px), linear-gradient(90deg, #f0fff4 1px, transparent 1px);
             background-size: 25px 25px;
             background-color: #fff;
-            border-radius: 20px;
+            border-radius: 15px;
             overflow: hidden;
-            border: 5px solid #fff;
+            border: 4px solid #fff;
         }
 
         /* 사과 그리드 */
         .apple-grid {
             flex-grow: 1;
             display: grid;
-            grid-template-columns: repeat(17, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            gap: 2px;
+            grid-template-columns: repeat(17, 35px); /* 사과 크기 고정 */
+            grid-template-rows: repeat(10, 35px);
+            justify-content: center;
+            align-content: center;
+            gap: 5px;
             padding: 10px;
         }
 
@@ -62,9 +63,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5vw;
+            font-size: 18px;
             font-weight: bold;
-            aspect-ratio: 1 / 1;
             cursor: pointer;
             transition: transform 0.1s;
         }
@@ -85,49 +85,52 @@
             visibility: hidden;
         }
 
-        /* 사이드바 */
+        /* 사이드바 (점수 & 타이머) */
         .sidebar {
             width: 80px;
             background-color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 10px;
+            padding: 15px 5px;
             border-left: 2px solid #f0fff4;
         }
 
         .score {
             color: #27ae60;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
+        /* 타이머 바깥쪽 통 */
         .progress-bar-container {
             flex-grow: 1;
-            width: 20px;
+            width: 15px;
             background-color: #ecf0f1;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
             align-items: flex-end;
+            margin-bottom: 10px;
         }
 
+        /* 타이머 차오르는 부분 */
         .progress-bar-fill {
             width: 100%;
-            height: 100%;
+            height: 100%; /* 자바스크립트로 조절됨 */
             background-color: #2ecc71;
             border-radius: 10px;
-            transition: height 1s linear;
+            transition: height 1s linear, background-color 0.5s;
         }
 
         /* 하단 컨트롤 바 */
         .footer {
-            height: 70px;
+            height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 10px;
             margin-top: 10px;
         }
 
@@ -135,13 +138,182 @@
             background-color: #2ecc71;
             color: #fff;
             border: none;
-            padding: 10px 25px;
-            font-size: 20px;
-            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
             cursor: pointer;
             border: 3px solid #fff;
         }
 
         .reset-btn:hover { background-color: #27ae60; }
-        .controls-group { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; color: #fff; font-size: 18px; }
-        .checkbox-container { display: flex;
+        .controls-group { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; color: #fff; font-size: 14px; font-weight: bold; }
+        .checkbox-container { display: flex; align-items: center; gap: 8px; }
+        .checkbox-container input[type="checkbox"] { width: 16px; height: 16px; accent-color: #fff; cursor: pointer; }
+        .bgm-controls { display: flex; align-items: center; gap: 8px; }
+        .music-note { font-size: 18px; }
+        .volume-slider { width: 120px; accent-color: #fff; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="tablet-frame">
+        <div class="main-container">
+            <div id="apple-grid" class="apple-grid"></div>
+            <div class="sidebar">
+                <div class="score">0</div>
+                <div class="progress-bar-container">
+                    <div id="time-bar" class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="reset-btn" onclick="initGame()">Reset</button>
+            <div class="controls-group">
+                <div class="checkbox-container">
+                    <span>薄い色</span>
+                    <input type="checkbox">
+                </div>
+                <div class="checkbox-container">
+                    <div class="bgm-controls">
+                        <span class="music-note">♪</span>
+                        <input type="checkbox" checked>
+                    </div>
+                </div>
+                <input type="range" class="volume-slider" min="0" max="100" value="50">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('apple-grid');
+        const scoreEl = document.querySelector('.score');
+        const timeBar = document.getElementById('time-bar');
+        
+        const rows = 10;
+        const cols = 17;
+        const GAME_TIME = 120; // 게임 시간 (초)
+
+        let score = 0;
+        let timeLeft = GAME_TIME;
+        let timerInterval;
+        let isDragging = false;
+        let startCell = null;
+        let selectedCells = [];
+
+        // 게임 초기화 및 사과 배치
+        function initGame() {
+            grid.innerHTML = '';
+            score = 0;
+            scoreEl.textContent = score;
+            timeLeft = GAME_TIME;
+            isDragging = false;
+            
+            // 타이머 초기화
+            clearInterval(timerInterval);
+            updateTimeBar();
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const apple = document.createElement('div');
+                    apple.className = 'apple';
+                    apple.dataset.row = r;
+                    apple.dataset.col = c;
+                    apple.textContent = Math.floor(Math.random() * 9) + 1;
+
+                    apple.addEventListener('mousedown', startDrag);
+                    apple.addEventListener('mouseenter', drag);
+                    grid.appendChild(apple);
+                }
+            }
+
+            // 타이머 시작
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimeBar();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert('⏰ 시간이 다 되었습니다! 최종 점수: ' + score + '점');
+                }
+            }, 1000);
+        }
+
+        // 타이머 바 시각적 업데이트 로직
+        function updateTimeBar() {
+            const percentage = (timeLeft / GAME_TIME) * 100;
+            timeBar.style.height = percentage + '%';
+            
+            // 시간이 20% 이하로 남으면 빨간색으로 경고
+            if (percentage <= 20) {
+                timeBar.style.backgroundColor = '#e74c3c';
+            } else {
+                timeBar.style.backgroundColor = '#2ecc71';
+            }
+        }
+
+        document.addEventListener('mouseup', endDrag);
+
+        function startDrag(e) {
+            if (timeLeft <= 0) return; // 시간 끝나면 조작 불가
+            isDragging = true;
+            startCell = e.target;
+            selectArea(startCell, startCell);
+        }
+
+        function drag(e) {
+            if (!isDragging || timeLeft <= 0) return;
+            selectArea(startCell, e.target);
+        }
+
+        function selectArea(start, end) {
+            clearSelection();
+            
+            // 오류 방지 (사과가 아닌 빈 공간을 드래그했을 때 튕기는 것 방지)
+            if(!start || !end || !start.classList || !end.classList) return;
+            if(!start.classList.contains('apple') || !end.classList.contains('apple')) return;
+
+            const r1 = Math.min(start.dataset.row, end.dataset.row);
+            const r2 = Math.max(start.dataset.row, end.dataset.row);
+            const c1 = Math.min(start.dataset.col, end.dataset.col);
+            const c2 = Math.max(start.dataset.col, end.dataset.col);
+
+            const allCells = document.querySelectorAll('.apple');
+            allCells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                if (r >= r1 && r <= r2 && c >= c1 && c <= c2 && !cell.classList.contains('hidden')) {
+                    cell.classList.add('selected');
+                    selectedCells.push(cell);
+                }
+            });
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.apple.selected').forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [];
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+
+            let sum = 0;
+            selectedCells.forEach(cell => sum += parseInt(cell.textContent));
+
+            // 합이 10이면 사과 숨기고 점수 올리기
+            if (sum === 10) {
+                selectedCells.forEach(cell => cell.classList.add('hidden'));
+                score += selectedCells.length;
+                scoreEl.textContent = score;
+            }
+
+            clearSelection();
+        }
+
+        // 브라우저가 열리면 바로 게임 시작
+        initGame();
+    </script>
+</body>
+</html>
