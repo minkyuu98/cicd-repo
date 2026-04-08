@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Github Pull') {
             steps {
-                git branch: 'main', url:'https://github.com/jaehwan01101/cicd-test.git'
+                git branch: 'main', url:'https://github.com/minkyuu98/cicd-repo.git'
             }
         }
                 stage('Git clone end') {
