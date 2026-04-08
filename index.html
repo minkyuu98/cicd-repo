@@ -1,1 +1,181 @@
-<h1> Jenkins Server Test </h1>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사과게임 (10 만들기)</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            text-align: center;
+            background-color: #fcfcfc;
+            user-select: none; /* 드래그 시 텍스트 선택 방지 */
+        }
+        h1 { color: #e74c3c; }
+        #info {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 45px); /* 10칸 x 10칸 그리드 */
+            gap: 2px;
+            justify-content: center;
+            margin: 0 auto;
+            width: max-content;
+            padding: 10px;
+            background-color: #f1c40f;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .apple {
+            width: 45px;
+            height: 45px;
+            background-color: #ffdede;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #c0392b;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: transform 0.1s;
+        }
+        .apple:hover { transform: scale(1.05); }
+        .apple.selected {
+            background-color: #ff9ff3;
+            border: 2px solid #e056fd;
+            box-sizing: border-box;
+            color: #fff;
+        }
+        .apple.hidden {
+            visibility: hidden; /* 사과가 터지면 보이지 않게 처리 */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🍎 미니 사과게임 🍎</h1>
+    <div id="info">
+        점수: <span id="score" style="color:#27ae60;">0</span> 점 | 
+        남은 시간: <span id="time" style="color:#c0392b;">120</span> 초
+    </div>
+    
+    <div id="game-board"></div>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const scoreEl = document.getElementById('score');
+        const timeEl = document.getElementById('time');
+        
+        let score = 0;
+        let timeLeft = 120;
+        let isDragging = false;
+        let startCell = null;
+        let selectedCells = [];
+        let timer;
+
+        // 보드 크기 설정 (10x10)
+        const rows = 10;
+        const cols = 10;
+
+        // 게임 초기화 및 시작
+        function initGame() {
+            board.innerHTML = '';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('apple');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    // 1부터 9까지 랜덤 숫자 배정
+                    cell.innerText = Math.floor(Math.random() * 9) + 1;
+
+                    // 마우스 이벤트 등록
+                    cell.addEventListener('mousedown', startDrag);
+                    cell.addEventListener('mouseenter', drag);
+                    board.appendChild(cell);
+                }
+            }
+            document.addEventListener('mouseup', endDrag);
+
+            // 타이머 설정
+            timer = setInterval(() => {
+                timeLeft--;
+                timeEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert('⏰ 게임 종료! 최종 점수: ' + score + '점');
+                    // 게임 종료 시 조작 불가 처리
+                    document.removeEventListener('mouseup', endDrag);
+                    isDragging = false;
+                }
+            }, 1000);
+        }
+
+        // 마우스를 눌렀을 때 (드래그 시작)
+        function startDrag(e) {
+            if (timeLeft <= 0) return;
+            isDragging = true;
+            startCell = e.target;
+            selectArea(startCell, startCell);
+        }
+
+        // 마우스를 누른 채로 이동할 때 (영역 선택)
+        function drag(e) {
+            if (!isDragging) return;
+            selectArea(startCell, e.target);
+        }
+
+        // 시작점과 끝점을 기준으로 사각형 영역 계산 및 선택
+        function selectArea(start, end) {
+            clearSelection();
+            const r1 = Math.min(start.dataset.row, end.dataset.row);
+            const r2 = Math.max(start.dataset.row, end.dataset.row);
+            const c1 = Math.min(start.dataset.col, end.dataset.col);
+            const c2 = Math.max(start.dataset.col, end.dataset.col);
+
+            const allCells = document.querySelectorAll('.apple');
+            allCells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                // 사각형 범위 안에 있고, 아직 지워지지 않은 사과라면 선택
+                if (r >= r1 && r <= r2 && c >= c1 && c <= c2 && !cell.classList.contains('hidden')) {
+                    cell.classList.add('selected');
+                    selectedCells.push(cell);
+                }
+            });
+        }
+
+        // 선택 초기화
+        function clearSelection() {
+            document.querySelectorAll('.apple.selected').forEach(cell => cell.classList.remove('selected'));
+            selectedCells = [];
+        }
+
+        // 마우스를 뗐을 때 (합 검사 및 제거)
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+
+            let sum = 0;
+            selectedCells.forEach(cell => sum += parseInt(cell.innerText));
+
+            // 합이 정확히 10이면 사과 제거 및 점수 획득
+            if (sum === 10) {
+                selectedCells.forEach(cell => {
+                    cell.classList.add('hidden');
+                });
+                score += selectedCells.length; // 지운 사과 개수만큼 점수 증가
+                scoreEl.innerText = score;
+            }
+
+            clearSelection();
+        }
+
+        // 게임 실행
+        initGame();
+    </script>
+</body>
+</html>
